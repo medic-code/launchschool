@@ -63,6 +63,12 @@ class Board {
     return keys.filter(key => this.squares[key].isUnused());
   }
 
+  resetSquares() {
+    for (let counter = 1; counter <= 9; ++counter) {
+      this.squares[String(counter)] = new Square();
+    }
+  }
+
   countMarkersFor(player, keys) {
     let markers = keys.filter(key => {
       return this.squares[key].getMarker() === player.getMarker();
@@ -119,10 +125,10 @@ class TTTGame {
     this.computer = new Computer();
   }
 
-  play() {
-    this.displayWelcomeMessage();
-
+  playOnce() {
+    this.board.resetSquares();
     this.board.display();
+
     while (true) {
       this.humanMoves();
       if (this.gameOver()) break;
@@ -131,13 +137,33 @@ class TTTGame {
       if (this.gameOver()) break;
 
       this.board.displayWithClear();
-    }
 
-    this.board.displayWithClear();
+    }
     this.displayResults();
-    this.displayGoodbyeMessage();
   }
 
+  playAgain() {
+    let answer;
+    while (true) {
+      answer = readline.question('Would you like to play again ');
+      if (answer === 'y') {
+        this.playOnce();
+      } else if (answer === 'n') {
+        return;
+      }
+      console.log('Sorry wrong choice');
+    }
+  }
+
+  play() {
+    this.displayWelcomeMessage();
+    while (true) {
+      this.playOnce();
+      if (!this.playAgain()) break;
+
+    }
+    this.displayGoodbyeMessage();
+  }
   static joinOr(array,delimiter = ', ', option = 'or') {
     if (array.length === 1) {
       return array.join('');
@@ -173,7 +199,8 @@ class TTTGame {
 
     while (true) {
       let validChoices = this.board.unusedSquares();
-      const prompt = `Choose a square (${this.joinOr(validChoices)}): `;
+      console.log(validChoices);
+      const prompt = `Choose a square (${TTTGame.joinOr(validChoices)}): `;
       choice = readline.question(prompt);
 
       if (validChoices.includes(choice)) break;
