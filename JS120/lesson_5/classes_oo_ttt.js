@@ -138,6 +138,16 @@ class TTTGame {
     this.displayGoodbyeMessage();
   }
 
+  static joinOr(array,delimiter = ', ', option = 'or') {
+    if (array.length === 1) {
+      return array.join('');
+    } else if (array.length === 2) {
+      return array.join(` ${option} `);
+    }
+    let firstPart = array.slice(0,-1).join(delimiter);
+    let lastPart = `${delimiter}${option} ${array.slice(-1).join('')}`;
+    return firstPart + lastPart;
+  }
   displayWelcomeMessage() {
     console.clear();
     console.log("Welcome to Tic Tac Toe!");
@@ -163,7 +173,7 @@ class TTTGame {
 
     while (true) {
       let validChoices = this.board.unusedSquares();
-      const prompt = `Choose a square (${validChoices.join(", ")}): `;
+      const prompt = `Choose a square (${this.joinOr(validChoices)}): `;
       choice = readline.question(prompt);
 
       if (validChoices.includes(choice)) break;
