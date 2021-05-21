@@ -60,9 +60,12 @@ class Board {
 
   unusedSquares() {
     let keys = Object.keys(this.squares);
-    return keys.filter(key => this.squares[key].isUnused());
+    return keys.filter(key => this.isUnusedSquare(key));
   }
 
+  isUnusedSquare(key) {
+    return this.squares[key].isUnused();
+  }
   resetSquares() {
     for (let counter = 1; counter <= 9; ++counter) {
       this.squares[String(counter)] = new Square();
@@ -125,14 +128,35 @@ class TTTGame {
     this.computer = new Computer();
   }
 
+  defensiveComputerMove() {
+    for (let index = 0; index < TTTGame.POSSIBLE_WINNING_ROWS.length; ++index) {
+      let row = TTTGame.POSSIBLE_WINNING_ROWS[index];
+      let key = this.atRiskSquare(row);
+      if (key) return key;
+    }
+
+    return null;
+  }
+
+  atRiskSquare(row) {
+
+    if (this.board.countMarkersFor(this.computer, row) === 2) {
+      let index = row.findIndex(key => this.board.isUnusedSquare(key));
+      if (index >= 0) return row[index];
+    } else if (this.board.countMarkersFor(this.human, row) === 2) {
+      let index = row.findIndex(key => this.board.isUnusedSquare(key));
+      if (index >= 0) return row[index];
+    }
+    return null;
+  }
   playOnce() {
     this.board.resetSquares();
     this.board.display();
 
     while (true) {
       this.humanMoves();
-      if (this.gameOver()) break;
 
+      if (this.gameOver()) break;
       this.computerMoves();
       if (this.gameOver()) break;
 
@@ -199,7 +223,6 @@ class TTTGame {
 
     while (true) {
       let validChoices = this.board.unusedSquares();
-      console.log(validChoices);
       const prompt = `Choose a square (${TTTGame.joinOr(validChoices)}): `;
       choice = readline.question(prompt);
 
@@ -213,12 +236,15 @@ class TTTGame {
   }
 
   computerMoves() {
-    let validChoices = this.board.unusedSquares();
-    let choice;
+    let choice = this.defensiveComputerMove();
 
-    do {
-      choice = Math.floor((9 * Math.random()) + 1).toString();
-    } while (!validChoices.includes(choice));
+    if (!choice) {
+      let validChoices = this.board.unusedSquares();
+
+      do {
+        choice = Math.floor((9 * Math.random()) + 1).toString();
+      } while (!validChoices.includes(choice));
+    }
 
     this.board.markSquareAt(choice, this.computer.getMarker());
   }
